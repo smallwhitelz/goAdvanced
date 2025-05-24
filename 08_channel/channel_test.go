@@ -27,11 +27,12 @@ func TestChannelClose(t *testing.T) {
 	val, ok := <-ch
 	t.Log("读到数据了吗?", ok, val)
 	close(ch)
-	// 这个操作会引起panic
+	// close之后不可以放入数据 否则操作会引起panic
 	//ch <-123
+	// close之后读数据，会读到零值
 	val, ok = <-ch
 	t.Log("读到数据了吗?", ok, val)
-	// 也会panic
+	// 再次close 也会panic
 	//close(ch)
 }
 
@@ -54,7 +55,10 @@ func TestChannelBlocking(t *testing.T) {
 	ch := make(chan int)
 	b1 := BigStruct{}
 	go func() {
+		// 在goroutine里一直没有结束掉，所以不会被垃圾回收掉
 		var b BigStruct
+		// 1. 写入没有缓存
+		// 2. 没有接收者
 		// 这个就是 goroutine 泄漏
 		ch <- 123
 		t.Log(b, b1)
